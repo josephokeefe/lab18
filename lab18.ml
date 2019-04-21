@@ -22,6 +22,8 @@ just as you did in Lab 9, Part 1 for substitution semantics.
 Before beginning, what should this expression evaluate to? Test out
 your prediction in the OCaml REPL. *)
 
+(*36*)
+
 (* The exercises will take you through the derivation stepwise, so
 that you can use the results from earlier exercises in the later
 exercises.
@@ -83,18 +85,40 @@ help and to check your answers. *)
 Exercise 4. Carry out the derivation for the semantics of the
 expression x * x in the environment mapping x to 6, following the
 rules in Figure 19.1.
+
+{fun x -> 6} ⊢ x * x ⇒
+                      | {fun x -> 6} ⊢ x ⇒ 6
+                      | {fun x -> 6} ⊢ x ⇒ 6
+                      ⇒ 36
+
 ....................................................................*)
 
 (*....................................................................
 Exercise 5. Carry out the derivation for the semantics of the
 expression x - 2 in the environment mapping x to 8, following the
 rules in Figure 19.1.
+
+{fun x -> 8} ⊢ x - 2 ⇒
+                      | {fun x -> 8} ⊢ x ⇒ 8
+                      | {fun x -> 8} ⊢ 2 ⇒ 2
+                      ⇒ 6
+
 ....................................................................*)
 
 (*....................................................................
 Exercise 6. Carry out the derivation for the semantics of the
 expression (fun x -> x * x) (x - 2) in the environment mapping
 x to 8, following the rules in Figure 19.1.
+
+{x -> 8} ⊢ (fun x -> x * x) (x - 2) ⇒
+                      | {x -> 8} ⊢ fun x -> x * x ⇒ fun x -> x * x
+                      | {x -> 8} ⊢ x - 2 ⇒
+                                            | {fun x -> 8} ⊢ x ⇒ 8
+                                            | {fun x -> 8} ⊢ 2 ⇒ 2
+                                            ⇒  6
+                      ⇒ 36
+                                    
+
 ....................................................................*)
 
 (*....................................................................
@@ -119,9 +143,20 @@ expression, you don't need to rederive the earlier expression's value;
 just use it directly. Each expression should be evaluated in an
 initially empty environment.
 
-1. 2 * 25
+1.
+{} ⊢ 2 * 25 ⇒
+            | {} ⊢ 2  ⇒ 2  (R_int)
+            | {} ⊢ 25 ⇒ 25 (R_int)
+            ⇒ 50           (R_* )
 
-2. let x = 2 * 25 in x + 1
+2.
+{} ⊢ let x = 2 * 25 in x + 1 ⇒
+     | {} ⊢ 2 * 25 ⇒ 50
+     | {x -> 50} ⊢ x + 1 ⇒
+                         | {x -> 50} x ⇒ 50
+                         | {x -> 50} 1 ⇒ 1
+                         ⇒ 51
+     ⇒ 51
 
 3. let x = 2 in x * x
 
@@ -134,6 +169,27 @@ environment semantic rules in Figure 19.1. Use an initially empty
 environment.
 
 let x = 2 in let f = fun y -> x + y in let x = 8 in f x
+
+
+{} ⊢ let x = 2 in let f = fun y -> x + y in let x = 8 in f x ⇒
+   | {} ⊢ 2 ⇒ 2
+   | {x -> 2} ⊢ let f = fun y -> x + y in let x = 8 in f x ⇒
+       | {x -> 2} ⊢ fun y -> x + y ⇒ fun y -> x + y
+       | {x -> 2, f -> fun y -> x + y} ⊢ let x = 8 in f x ⇒
+           | {x -> 2, f -> fun y -> x + y} ⊢ 8 ⇒ 8
+           | {x -> 8, f -> fun y -> x + y} ⊢ f x ⇒
+              | {x -> 8, f -> fun y -> x + y} ⊢ f ⇒ fun y -> x + y
+              | {x -> 8, f -> fun y -> x + y} ⊢ x ⇒ 8
+              | {x -> 8, f -> fun y -> x + y, y -> 8} ⊢ x + y ⇒
+                 | {x -> 8, f -> fun y -> x + y, y -> 8} ⊢ x ⇒ 8
+                 | {x -> 8, f -> fun y -> x + y, y -> 8} ⊢ y ⇒ 8
+                 ⇒ 16
+              ⇒ 16
+           ⇒ 16
+       ⇒ 16
+   ⇒ 16     
+
+
 ....................................................................*)
 
 
@@ -152,6 +208,45 @@ evaluated in an initially empty environment.
 
 3. let x = 2 in let f = fun y -> x + y in f 8
 
+1.
+{} ⊢ (fun y -> y + y) 10 ⇒
+      | {} ⊢ (fun y -> y + y) ⇒ [{} ⊢ (fun y -> y + y)] ]
+      | {} ⊢ 10 ⇒ 10
+      | {y -> 10} ⊢ y + y ⇒
+                          | {y -> 10} ⊢ y ⇒ 10
+                          | {y -> 10} ⊢ y ⇒ 10
+                          ⇒ 20
+      ⇒ 20
+
+2.
+{} ⊢ let f = fun y -> y + y in f 10 ⇒
+    | {} ⊢ fun y -> y + y ⇒ [{}, (fun y -> y + y)]
+    | {f -> [{}, (fun y -> y + y)]} ⊢ f 10 ⇒
+          | {f -> [{}, (fun y -> y + y)]} ⊢ f ⇒ [{}, (fun y -> y + y)]
+          | {f -> [{}, (fun y -> y + y)]} ⊢ 10 ⇒ 10
+          | {y -> 10} ⊢ y + y ⇒
+                               | {y -> 10} ⊢ y ⇒ 10
+                               | {y -> 10} ⊢ y ⇒ 10
+                               ⇒ 20
+          ⇒ 20
+    ⇒ 20
+
+3.
+{} ⊢ let x = 2 in let f = fun y -> x + y in f 8 ⇒
+  | {} ⊢ 2 ⇒ 2
+  | {x -> 2} ⊢ let f = fun y -> x + y in f 8 ⇒
+    | {x -> 2} ⊢ fun y -> x + y ⇒ [{x -> 2}, (fun y -> x + y)]
+    | {x -> 2, f -> [{x -> 2}, (fun y -> x + y)]} ⊢ f 8 ⇒
+      | {x -> 2, f -> [{x -> 2}, (fun y -> x + y)]} ⊢ f ⇒ [{x -> 2}, (fun y -> x + y)]
+      | {x -> 2, f -> [{x -> 2}, (fun y -> x + y)]} ⊢ 8 ⇒ 8
+      | {x -> 2, y -> 8} ⊢ x + y ⇒
+        | {x -> 2, y -> 8} ⊢ x ⇒ 2
+        | {x -> 2, y -> 8} ⊢ y ⇒ 8
+        ⇒ 10
+      ⇒ 10
+    ⇒ 10
+  ⇒ 10
+
 ....................................................................*)
 
 (*....................................................................
@@ -160,6 +255,26 @@ environment semantic rules in Figure 19.2. Use an initially
 empty environment.
 
 let x = 2 in let f = fun y -> x + y in let x = 8 in f x
+
+
+{} ⊢ let x = 2 in let f = fun y -> x + y in let x = 8 in f x ⇒
+  | {} ⊢ 2 ⇒ 2
+  | {x -> 2} ⊢ let f = fun y -> x + y in let x = 8 in f x ⇒
+    | {x -> 2} ⊢ fun y -> x + y ⇒ [{x -> 2} ⊢ fun y -> x + y]
+    | {x -> 2, f -> [{x -> 2} ⊢ fun y -> x + y]} ⊢ let x = 8 in f x ⇒
+      | {x -> 2, f -> [{x -> 2} ⊢ fun y -> x + y]} ⊢ 8 ⇒ 8
+      | {x -> 8, f -> [{x -> 2} ⊢ fun y -> x + y]} ⊢ f x ⇒
+        | {x -> 8, f -> [{x -> 2} ⊢ fun y -> x + y]} ⊢ f ⇒ [{x -> 2} ⊢ fun y -> x + y]
+        | {x -> 8, f -> [{x -> 2} ⊢ fun y -> x + y]} ⊢ x ⇒ 8
+        | {x -> 2, y -> 8} ⊢ x + y ⇒
+          | {x -> 2, y -> 8} ⊢ x ⇒ 2
+          | {x -> 2, y -> 8} ⊢ y ⇒ 8
+          ⇒ 10
+        ⇒ 10
+      ⇒ 10
+    ⇒ 10
+  ⇒ 10        
+
 ....................................................................*)
 
 
@@ -196,7 +311,7 @@ type env = (varid * value) list ;;
 Exercise 13: Fill in the implementation of the empty environment.
 ....................................................................*)
 
-let empty : env = failwith "empty not implemented" ;;
+let empty : env = [] ;;
 
 (*....................................................................
 Exercise 14: Write a function extend : env -> varid -> value -> env
@@ -206,7 +321,7 @@ already in the environment.
 ....................................................................*)
 
 let extend (e : env) (x : varid) (v : value) : env =
-  failwith "extend not implemented" ;;
+  (x, v) :: (List.remove_assoc x e) ;;
 
 (*....................................................................
 Exercise 15: Write a function lookup : env -> varid -> value that
@@ -215,5 +330,5 @@ Not_found exception if the variable has no value in the environment.
 ....................................................................*)
 
 let lookup (x : varid) (e : env) : value =
-  failwith "lookup not implemented" ;;
+  List.assoc x e ;;
 
